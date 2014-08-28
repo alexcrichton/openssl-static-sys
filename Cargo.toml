@@ -1,0 +1,6 @@
+[package]
+
+name = "openssl-static-sys"
+version = "0.0.1"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+build = "./build/cp_ssl.sh"
