@@ -7,6 +7,9 @@ if [ "$(uname -s)" = "Linux" ]; then
         exit 0
     fi
     dir=$(echo $dir | sed 's/^-L//')
-    cp "${dir}/libssl.a" "$OUT_DIR"
-    cp "${dir}/libcrypto.a" "$OUT_DIR"
+
+    if [ -f "${dir}/libssl.a" ]; then
+        cp "${dir}/libssl.a" "$OUT_DIR"
+        cp "${dir}/libcrypto.a" "$OUT_DIR"
+    fi
 fi
