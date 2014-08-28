@@ -2,6 +2,7 @@
 set -xe
 
 if [ "$(uname -s)" = "Linux" ]; then
+    pkg-config openssl || exit 0
     dir=$(pkg-config --static --libs-only-L openssl)
     if [ -z "$(echo $dir)" ]; then
         exit 0
