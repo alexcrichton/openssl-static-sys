@@ -1,4 +1,5 @@
 use std::os;
+use std::io::fs::PathExtensions;
 
 /// Probe the system for the directory in which CA certificates should likely be
 /// found.
