@@ -12,6 +12,7 @@ pub fn find_certs_dirs() -> Vec<Path> {
         "/usr/share/ssl",
         "/usr/local/ssl",
         "/usr/local/openssl",
+        "/usr/local/share",
         "/usr/lib/ssl",
         "/usr/ssl",
         "/etc/openssl",
@@ -28,6 +29,7 @@ pub fn init_ssl_cert_env_vars() {
         // certs/ca-certificates.crt appears to be a 0.9.8 thing
         try("SSL_CERT_FILE", certs_dir.join("cert.pem"));
         try("SSL_CERT_FILE", certs_dir.join("certs/ca-certificates.crt"));
+        try("SSL_CERT_FILE", certs_dir.join("certs/ca-root-nss.crt"));
 
         try("SSL_CERT_DIR", certs_dir.join("certs"));
     }
