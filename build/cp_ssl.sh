@@ -1,16 +1,21 @@
 #!/bin/sh
 set -xe
 
-if [ "$(uname -s)" = "Linux" ]; then
-    pkg-config openssl || exit 0
-    dir=$(pkg-config --static --libs-only-L openssl)
+cp_static () {
+    pkg-config $1 || exit 0
+
+    dir=$(pkg-config --static --libs-only-L $1)
     if [ -z "$(echo $dir)" ]; then
         exit 0
     fi
     dir=$(echo $dir | sed 's/^-L//')
 
-    if [ -f "${dir}/libssl.a" ]; then
-        cp "${dir}/libssl.a" "$OUT_DIR"
-        cp "${dir}/libcrypto.a" "$OUT_DIR"
+    if [ -f "${dir}/$2" ]; then
+        cp "${dir}/$2" "$OUT_DIR"
     fi
+}
+
+if [ "$(uname -s)" = "Linux" ]; then
+    cp_static openssl libssl.a
+    cp_static libcrypto libcrypto.a
 fi
