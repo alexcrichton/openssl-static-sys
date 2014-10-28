@@ -1,6 +1,11 @@
 use std::os;
 use std::io::fs::PathExtensions;
 
+pub struct ProbeResult {
+    pub cert_file: Option<Path>,
+    pub cert_dir: Option<Path>,
+}
+
 /// Probe the system for the directory in which CA certificates should likely be
 /// found.
 ///
@@ -24,23 +29,44 @@ pub fn find_certs_dirs() -> Vec<Path> {
 }
 
 pub fn init_ssl_cert_env_vars() {
-    for certs_dir in find_certs_dirs().iter() {
-        // cert.pem looks to be an openssl 1.0.1 thing, while
-        // certs/ca-certificates.crt appears to be a 0.9.8 thing
-        try("SSL_CERT_FILE", certs_dir.join("cert.pem"));
-        try("SSL_CERT_FILE", certs_dir.join("certs/ca-certificates.crt"));
-        try("SSL_CERT_FILE", certs_dir.join("certs/ca-root-nss.crt"));
+    let ProbeResult { cert_file, cert_dir } = probe();
+    match cert_file {
+        Some(path) => put("SSL_CERT_FILE", path),
+        None => {}
+    }
+    match cert_dir {
+        Some(path) => put("SSL_CERT_DIR", path),
+        None => {}
+    }
 
-        try("SSL_CERT_DIR", certs_dir.join("certs"));
+    fn put(var: &str, path: Path) {
+        // Don't stomp over what anyone else has set
+        match os::getenv(var) {
+            Some(..) => {}
+            None => os::setenv(var, path),
+        }
     }
 }
 
-fn try(var: &str, val: Path) {
-    if !val.exists() { return }
-    match os::getenv(var) {
-        // Someone else has already got this, they probably know what
-        // they're doing more than we do
-        Some(..) => {},
-        None => os::setenv(var, val),
+pub fn probe() -> ProbeResult {
+    let mut result = ProbeResult {
+        cert_file: os::getenv("SSL_CERT_FILE").map(Path::new),
+        cert_dir: os::getenv("SSL_CERT_DIR").map(Path::new),
+    };
+    for certs_dir in find_certs_dirs().iter() {
+        // cert.pem looks to be an openssl 1.0.1 thing, while
+        // certs/ca-certificates.crt appears to be a 0.9.8 thing
+        try(&mut result.cert_file, certs_dir.join("cert.pem"));
+        try(&mut result.cert_file, certs_dir.join("certs/ca-certificates.crt"));
+        try(&mut result.cert_file, certs_dir.join("certs/ca-root-nss.crt"));
+
+        try(&mut result.cert_dir, certs_dir.join("certs"));
+    }
+    result
+}
+
+fn try(dst: &mut Option<Path>, val: Path) {
+    if dst.is_none() && val.exists() {
+        *dst = Some(val);
     }
 }
